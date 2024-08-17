@@ -1,0 +1,6 @@
+seqgenex0.o: seqgenex0.c seqgen.h
+seqgen.o: seqgen.c
+seqgen2.o: seqgen2.c
+seqgen3.o: seqgen3.c
+seqv4l2.o: seqv4l2.c
+capturelib.o: capturelib.c
