@@ -55,6 +55,10 @@ int main(int argc, char** argv)
         std::cout << "Opened default camera interface" << std::endl;
     }
 
+    // Set the desired frame size to reduce window size
+    vcap.set(CAP_PROP_FRAME_WIDTH, 320);
+    vcap.set(CAP_PROP_FRAME_HEIGHT, 240);
+
     // Ensure the first frame is captured
     while (!vcap.read(mat_frame)) {
         std::cout << "No frame" << std::endl;
@@ -70,6 +74,16 @@ int main(int argc, char** argv)
 
     // Calculate the maximum possible difference (used for percentage difference calculation)
     maxdiff = (mat_diff.cols) * (mat_diff.rows) * 255;
+
+    // Create windows for display
+    cv::namedWindow("Clock Current", WINDOW_NORMAL);
+    cv::namedWindow("Clock Previous", WINDOW_NORMAL);
+    cv::namedWindow("Clock Diff", WINDOW_NORMAL);
+
+    // Resize the display windows
+    cv::resizeWindow("Clock Current", 320, 240);
+    cv::resizeWindow("Clock Previous", 320, 240);
+    cv::resizeWindow("Clock Diff", 320, 240);
 
     while (1)
     {
