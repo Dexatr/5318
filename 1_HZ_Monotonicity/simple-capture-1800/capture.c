@@ -1,11 +1,3 @@
-/*
- *  Adapted by Sam Siewert for use with UVC web cameras and Bt878 frame
- *  grabber NTSC cameras to acquire digital video from a source,
- *  time-stamp each frame acquired, and save to a PGM or PPM file.
- *
- *  This program is based on the V4L2 API and can be used and distributed without restrictions.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -749,7 +741,7 @@ static void open_device(void) {
     fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 
     if (-1 == fd) {
-        fprintf(stderr, "Cannot open '%s': %d, %s\n", dev_name);
+        fprintf(stderr, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
         syslog(LOG_ERR, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
