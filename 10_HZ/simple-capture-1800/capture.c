@@ -60,7 +60,7 @@ char ppm_dumpname[PATH_MAX];
 char pgm_header[] = "P5\n#9999999999 sec 9999999999 msec \n"HRES_STR" "VRES_STR"\n255\n";
 char pgm_dumpname[PATH_MAX];
 
-FILE *log_file;
+FILE *log_file = NULL; // Initialize to NULL to prevent unintended use
 
 void log_message(const char *format, ...) {
     va_list args;
@@ -69,10 +69,12 @@ void log_message(const char *format, ...) {
     // Log to syslog
     vsyslog(LOG_INFO, format, args);
 
-    // Log to the file
-    va_start(args, format);  // Re-initialize the argument list for the file log
-    vfprintf(log_file, format, args);
-    fflush(log_file);  // Ensure the log is written out
+    // Log to the file only if log_file is successfully opened
+    if (log_file != NULL) {
+        va_start(args, format);  // Re-initialize the argument list for the file log
+        vfprintf(log_file, format, args);
+        fflush(log_file);  // Ensure the log is written out
+    }
 
     va_end(args);
 }
@@ -846,7 +848,10 @@ int main(int argc, char **argv) {
     fprintf(stderr, "\n");
 
     log_message("10Hz: Capture application finished\n");
-    fclose(log_file);
+
+    if (log_file != NULL) {
+        fclose(log_file);
+    }
     closelog();
 
     return 0;
