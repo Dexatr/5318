@@ -24,6 +24,7 @@ capture: ${OBJS}
 clean:
 	-rm -f *.o capture
 	-rm -f frames/*
+	-rm -f 10Hz_capture.log
 
 # Remove object files and capture executable (useful for a fresh rebuild)
 distclean: clean
