@@ -1,7 +1,0 @@
--O2
--g
--Wall
--Wextra
--pedantic
--MM
-capture.c
