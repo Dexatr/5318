@@ -15,7 +15,7 @@
 #include <time.h>
 #include <limits.h>
 #include <libgen.h>
-#include <syslog.h>   // Added for syslog debugging
+#include <syslog.h>
 
 // Macros to clear memory, set resolution, and define frame capture limits
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
@@ -31,7 +31,7 @@
 #define CAPTURE_FRAMES (1800 + LAST_FRAMES)
 #define FRAMES_TO_ACQUIRE (CAPTURE_FRAMES + START_UP_FRAMES + LAST_FRAMES)
 
-#define FRAMES_PER_SEC 1   // Updated to 1 FPS for the assignment requirements
+#define FRAMES_PER_SEC 10   // Set to 10 FPS for the assignment requirements
 
 #define DUMP_FRAMES
 
@@ -112,15 +112,12 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     if (dumpfd == -1) {
         syslog(LOG_ERR, "Failed to open ppm file %s: %s\n", ppm_dumpname, strerror(errno));
         perror("Failed to open ppm file");
-        printf("File: %s\n", ppm_dumpname);
         return;
     }
 
     // Add the timestamp to the PPM header
     snprintf(&ppm_header[4], 11, "%010d", (int)time->tv_sec);
-    strncat(&ppm_header[14], " sec ", 5);
     snprintf(&ppm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
-    strncat(&ppm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     // Write the PPM header to the file
     written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
@@ -148,7 +145,6 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
     syslog(LOG_INFO, "PPM frame written to %s at %lf, %d bytes\n", ppm_dumpname, (fnow - fstart), total);
-    printf("PPM frame written to %s at %lf, %d bytes\n", ppm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -162,15 +158,12 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     if (dumpfd == -1) {
         syslog(LOG_ERR, "Failed to open pgm file %s: %s\n", pgm_dumpname, strerror(errno));
         perror("Failed to open pgm file");
-        printf("File: %s\n", pgm_dumpname);
         return;
     }
 
     // Add the timestamp to the PGM header
     snprintf(&pgm_header[4], 11, "%010d", (int)time->tv_sec);
-    strncat(&pgm_header[14], " sec ", 5);
     snprintf(&pgm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
-    strncat(&pgm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     // Write the PGM header to the file
     written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
@@ -198,7 +191,6 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
     syslog(LOG_INFO, "PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
-    printf("PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -231,8 +223,7 @@ static void process_image(const void *p, int size) {
 
     framecnt++;
     syslog(LOG_INFO, "Processing frame %d with size %d\n", framecnt, size);
-    printf("Processing frame %d with size %d\n", framecnt, size);
-    
+
     if (framecnt == 0) {
         clock_gettime(CLOCK_MONOTONIC, &time_start);
         fstart = (double)time_start.tv_sec + (double)time_start.tv_nsec / 1000000000.0;
@@ -241,10 +232,8 @@ static void process_image(const void *p, int size) {
 #ifdef DUMP_FRAMES
     // Save frames based on their format (GRAY, YUYV, RGB)
     if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
-        syslog(LOG_INFO, "Dumping GRAY frame as-is\n");
         dump_pgm(p, size, framecnt, &frame_time);
     } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-        syslog(LOG_INFO, "Converting YUYV frame to YY and dumping\n");
         for (i = 0, newi = 0; i < size; i += 4, newi += 2) {
             bigbuffer[newi] = pptr[i];
             bigbuffer[newi + 1] = pptr[i + 2];
@@ -253,11 +242,9 @@ static void process_image(const void *p, int size) {
             dump_pgm(bigbuffer, (size / 2), framecnt, &frame_time);
         }
     } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
-        syslog(LOG_INFO, "Dumping RGB frame as-is\n");
         dump_ppm(p, size, framecnt, &frame_time);
     } else {
         syslog(LOG_ERR, "ERROR - unknown dump format\n");
-        printf("ERROR - unknown dump format\n");
     }
 #endif
 }
@@ -293,7 +280,6 @@ static int read_frame(void) {
                     case EIO:
                     default:
                         syslog(LOG_ERR, "mmap failure\n");
-                        printf("mmap failure\n");
                         errno_exit("VIDIOC_DQBUF");
                 }
             }
@@ -342,9 +328,9 @@ static void mainloop(void) {
     struct timespec time_error;
 
     // Configure the read delay based on the desired frames per second
-    printf("Running at 10 frame/sec\n");
+    printf("Running at 10 frames/sec\n");
     read_delay.tv_sec = 0;
-    read_delay.tv_nsec = 100000000;
+    read_delay.tv_nsec = 100000000; // 10 Hz
 
     count = frame_count;
 
@@ -370,7 +356,6 @@ static void mainloop(void) {
             }
 
             if (0 == r) {
-                fprintf(stderr, "select timeout\n");
                 syslog(LOG_ERR, "select timeout\n");
                 exit(EXIT_FAILURE);
             }
@@ -383,10 +368,8 @@ static void mainloop(void) {
                         clock_gettime(CLOCK_MONOTONIC, &time_now);
                         fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
                         syslog(LOG_INFO, "Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
-                        printf("Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
                     } else {
                         syslog(LOG_INFO, "Initial frame read at %lf\n", fnow);
-                        printf("Initial frame read at %lf\n", fnow);
                     }
                 }
 
@@ -497,7 +480,6 @@ static void init_read(unsigned int buffer_size) {
     buffers = calloc(1, sizeof(*buffers));
 
     if (!buffers) {
-        fprintf(stderr, "Out of memory\n");
         syslog(LOG_ERR, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -506,7 +488,6 @@ static void init_read(unsigned int buffer_size) {
     buffers[0].start = malloc(buffer_size);
 
     if (!buffers[0].start) {
-        fprintf(stderr, "Out of memory\n");
         syslog(LOG_ERR, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -524,7 +505,6 @@ static void init_mmap(void) {
 
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
-            fprintf(stderr, "%s does not support memory mapping\n", dev_name);
             syslog(LOG_ERR, "%s does not support memory mapping\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
@@ -533,7 +513,6 @@ static void init_mmap(void) {
     }
 
     if (req.count < 2) {
-        fprintf(stderr, "Insufficient buffer memory on %s\n", dev_name);
         syslog(LOG_ERR, "Insufficient buffer memory on %s\n", dev_name);
         exit(EXIT_FAILURE);
     }
@@ -541,7 +520,6 @@ static void init_mmap(void) {
     buffers = calloc(req.count, sizeof(*buffers));
 
     if (!buffers) {
-        fprintf(stderr, "Out of memory\n");
         syslog(LOG_ERR, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -583,7 +561,6 @@ static void init_userp(unsigned int buffer_size) {
 
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
-            fprintf(stderr, "%s does not support user pointer I/O\n", dev_name);
             syslog(LOG_ERR, "%s does not support user pointer I/O\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
@@ -594,7 +571,6 @@ static void init_userp(unsigned int buffer_size) {
     buffers = calloc(4, sizeof(*buffers));
 
     if (!buffers) {
-        fprintf(stderr, "Out of memory\n");
         syslog(LOG_ERR, "Out of memory\n");
         exit(EXIT_FAILURE);
     }
@@ -604,7 +580,6 @@ static void init_userp(unsigned int buffer_size) {
         buffers[n_buffers].start = malloc(buffer_size);
 
         if (!buffers[n_buffers].start) {
-            fprintf(stderr, "Out of memory\n");
             syslog(LOG_ERR, "Out of memory\n");
             exit(EXIT_FAILURE);
         }
@@ -620,7 +595,6 @@ static void init_device(void) {
 
     if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
         if (EINVAL == errno) {
-            fprintf(stderr, "%s is no V4L2 device\n", dev_name);
             syslog(LOG_ERR, "%s is no V4L2 device\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
@@ -629,7 +603,6 @@ static void init_device(void) {
     }
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        fprintf(stderr, "%s is no video capture device\n", dev_name);
         syslog(LOG_ERR, "%s is no video capture device\n", dev_name);
         exit(EXIT_FAILURE);
     }
@@ -637,7 +610,6 @@ static void init_device(void) {
     switch (io) {
         case IO_METHOD_READ:
             if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-                fprintf(stderr, "%s does not support read I/O\n", dev_name);
                 syslog(LOG_ERR, "%s does not support read I/O\n", dev_name);
                 exit(EXIT_FAILURE);
             }
@@ -646,7 +618,6 @@ static void init_device(void) {
         case IO_METHOD_MMAP:
         case IO_METHOD_USERPTR:
             if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-                fprintf(stderr, "%s does not support streaming I/O\n", dev_name);
                 syslog(LOG_ERR, "%s does not support streaming I/O\n", dev_name);
                 exit(EXIT_FAILURE);
             }
@@ -676,7 +647,6 @@ static void init_device(void) {
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     if (force_format) {
-        printf("FORCING FORMAT\n");
         syslog(LOG_INFO, "FORCING FORMAT\n");
         fmt.fmt.pix.width = HRES;
         fmt.fmt.pix.height = VRES;
@@ -686,7 +656,6 @@ static void init_device(void) {
         if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
             errno_exit("VIDIOC_S_FMT");
     } else {
-        printf("ASSUMING FORMAT\n");
         syslog(LOG_INFO, "ASSUMING FORMAT\n");
         if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
             errno_exit("VIDIOC_G_FMT");
@@ -727,13 +696,11 @@ static void open_device(void) {
     struct stat st;
 
     if (-1 == stat(dev_name, &st)) {
-        fprintf(stderr, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
         syslog(LOG_ERR, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     if (!S_ISCHR(st.st_mode)) {
-        fprintf(stderr, "%s is no device\n", dev_name);
         syslog(LOG_ERR, "%s is no device\n", dev_name);
         exit(EXIT_FAILURE);
     }
@@ -741,7 +708,6 @@ static void open_device(void) {
     fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 
     if (-1 == fd) {
-        fprintf(stderr, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
         syslog(LOG_ERR, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -795,7 +761,6 @@ int main(int argc, char **argv) {
         set_output_directory(frames_dir);
         syslog(LOG_INFO, "Output directory set to %s\n", frames_dir);
     } else {
-        perror("Failed to determine executable path");
         syslog(LOG_ERR, "Failed to determine executable path\n");
         exit(EXIT_FAILURE);
     }
