@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <libgen.h>
 #include <syslog.h>
+#include <stdarg.h> // Include for va_start and va_end
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -119,9 +120,9 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
     }
 
     snprintf(&ppm_header[4], 11, "%010ld", time->tv_sec);
-    strncat(&ppm_header[14], " sec ", 5);
+    memcpy(&ppm_header[14], " sec ", 5);
     snprintf(&ppm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
-    strncat(&ppm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
+    memcpy(&ppm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
     if (written == -1) {
@@ -159,9 +160,9 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
     }
 
     snprintf(&pgm_header[4], 11, "%010ld", time->tv_sec);
-    strncat(&pgm_header[14], " sec ", 5);
+    memcpy(&pgm_header[14], " sec ", 5);
     snprintf(&pgm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
-    strncat(&pgm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
+    memcpy(&pgm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
     if (written == -1) {
@@ -732,9 +733,9 @@ static const struct option long_options[] = {
     { "mmap",   no_argument,       NULL, 'm' },
     { "read",   no_argument,       NULL, 'r' },
     { "userp",  no_argument,       NULL, 'u' },
-    { "output", no argument,       NULL, 'o' },
-    { "format", no argument,       NULL, 'f' },
-    { "count",  required argument, NULL, 'c' },
+    { "output", no_argument,       NULL, 'o' },
+    { "format", no_argument,       NULL, 'f' },
+    { "count",  required_argument, NULL, 'c' },
     { 0, 0, 0, 0 }
 };
 

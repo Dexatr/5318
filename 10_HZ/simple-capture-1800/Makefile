@@ -32,13 +32,13 @@ capture: ${OBJS}
 	$(CC) $(CFLAGS) -o $@ $@.o $(LDFLAGS)
 
 # Dependencies for the project
-depend: .depend
+# depend: .depend
 
-.depend: $(CFILES)
-	rm -f ./.depend
-	$(CC) $(CFLAGS) -MM $^ > ./.depend
+# .depend: $(CFILES)
+# 	rm -f ./.depend
+#	$(CC) $(CFLAGS) -MM $^ > ./.depend
 
-include .depend
+# include .depend
 
 # Rule to compile .c files to .o files
 .c.o:
