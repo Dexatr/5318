@@ -184,6 +184,10 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
         total += written;
     } while (total < size);
 
+    if (total != size) {  // Add a check to ensure the full data is written
+        log_message("10Hz: Warning - Only %d bytes out of %d written to PGM file %s\n", total, size, pgm_dumpname);
+    }
+
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
     log_message("10Hz: PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
