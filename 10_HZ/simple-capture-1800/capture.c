@@ -61,9 +61,23 @@ char pgm_dumpname[PATH_MAX];
 
 FILE *log_file;
 
+void log_message(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    // Log to syslog
+    vsyslog(LOG_INFO, format, args);
+
+    // Log to the file
+    va_start(args, format);  // Re-initialize the argument list for the file log
+    vfprintf(log_file, format, args);
+    fflush(log_file);  // Ensure the log is written out
+
+    va_end(args);
+}
+
 void errno_exit(const char *s) {
-    syslog(LOG_ERR, "10Hz: %s error %d, %s\n", s, errno, strerror(errno));
-    fprintf(log_file, "10Hz: %s error %d, %s\n", s, errno, strerror(errno));
+    log_message("10Hz: %s error %d, %s\n", s, errno, strerror(errno));
     exit(EXIT_FAILURE);
 }
 
@@ -81,7 +95,7 @@ int create_directory(const char *path) {
     if (stat(path, &st) == -1) {
         if (mkdir(path, 0700) != 0) {
             perror("Failed to create frames directory");
-            fprintf(log_file, "10Hz: Failed to create frames directory\n");
+            log_message("10Hz: Failed to create frames directory\n");
             return -1;
         }
     }
@@ -100,8 +114,7 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
     dumpfd = open(ppm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 0644);
 
     if (dumpfd == -1) {
-        syslog(LOG_ERR, "10Hz: Failed to open ppm file %s: %s\n", ppm_dumpname, strerror(errno));
-        fprintf(log_file, "10Hz: Failed to open ppm file %s: %s\n", ppm_dumpname, strerror(errno));
+        log_message("10Hz: Failed to open ppm file %s: %s\n", ppm_dumpname, strerror(errno));
         return;
     }
 
@@ -112,8 +125,7 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
 
     written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
     if (written == -1) {
-        syslog(LOG_ERR, "10Hz: Failed to write ppm header: %s\n", strerror(errno));
-        fprintf(log_file, "10Hz: Failed to write ppm header: %s\n", strerror(errno));
+        log_message("10Hz: Failed to write ppm header: %s\n", strerror(errno));
         close(dumpfd);
         return;
     }
@@ -122,8 +134,7 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
     do {
         written = write(dumpfd, p, size);
         if (written == -1) {
-            syslog(LOG_ERR, "10Hz: Failed to write ppm data: %s\n", strerror(errno));
-            fprintf(log_file, "10Hz: Failed to write ppm data: %s\n", strerror(errno));
+            log_message("10Hz: Failed to write ppm data: %s\n", strerror(errno));
             close(dumpfd);
             return;
         }
@@ -132,8 +143,7 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
 
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "10Hz: PPM frame written to %s at %lf, %d bytes\n", ppm_dumpname, (fnow - fstart), total);
-    fprintf(log_file, "10Hz: PPM frame written to %s at %lf, %d bytes\n", ppm_dumpname, (fnow - fstart), total);
+    log_message("10Hz: PPM frame written to %s at %lf, %d bytes\n", ppm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -144,8 +154,7 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
     dumpfd = open(pgm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 0644);
 
     if (dumpfd == -1) {
-        syslog(LOG_ERR, "10Hz: Failed to open pgm file %s: %s\n", pgm_dumpname, strerror(errno));
-        fprintf(log_file, "10Hz: Failed to open pgm file %s: %s\n", pgm_dumpname, strerror(errno));
+        log_message("10Hz: Failed to open pgm file %s: %s\n", pgm_dumpname, strerror(errno));
         return;
     }
 
@@ -156,8 +165,7 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
 
     written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
     if (written == -1) {
-        syslog(LOG_ERR, "10Hz: Failed to write pgm header: %s\n", strerror(errno));
-        fprintf(log_file, "10Hz: Failed to write pgm header: %s\n", strerror(errno));
+        log_message("10Hz: Failed to write pgm header: %s\n", strerror(errno));
         close(dumpfd);
         return;
     }
@@ -166,8 +174,7 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
     do {
         written = write(dumpfd, p, size);
         if (written == -1) {
-            syslog(LOG_ERR, "10Hz: Failed to write pgm data: %s\n", strerror(errno));
-            fprintf(log_file, "10Hz: Failed to write pgm data: %s\n", strerror(errno));
+            log_message("10Hz: Failed to write pgm data: %s\n", strerror(errno));
             close(dumpfd);
             return;
         }
@@ -176,8 +183,7 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
 
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "10Hz: PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
-    fprintf(log_file, "10Hz: PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
+    log_message("10Hz: PGM frame written to %s at %lf, %d bytes\n", pgm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -206,8 +212,7 @@ void process_image(const void *p, int size) {
     clock_gettime(CLOCK_REALTIME, &frame_time);    
 
     framecnt++;
-    syslog(LOG_INFO, "10Hz: Processing frame %d with size %d\n", framecnt, size);
-    fprintf(log_file, "10Hz: Processing frame %d with size %d\n", framecnt, size);
+    log_message("10Hz: Processing frame %d with size %d\n", framecnt, size);
     
     if (framecnt == 0) {
         clock_gettime(CLOCK_MONOTONIC, &time_start);
@@ -216,12 +221,10 @@ void process_image(const void *p, int size) {
 
 #ifdef DUMP_FRAMES
     if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
-        syslog(LOG_INFO, "10Hz: Dumping GRAY frame as-is\n");
-        fprintf(log_file, "10Hz: Dumping GRAY frame as-is\n");
+        log_message("10Hz: Dumping GRAY frame as-is\n");
         dump_pgm(p, size, framecnt, &frame_time);
     } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-        syslog(LOG_INFO, "10Hz: Converting YUYV frame to YY and dumping\n");
-        fprintf(log_file, "10Hz: Converting YUYV frame to YY and dumping\n");
+        log_message("10Hz: Converting YUYV frame to YY and dumping\n");
         for (i = 0, newi = 0; i < size; i += 4, newi += 2) {
             bigbuffer[newi] = pptr[i];
             bigbuffer[newi + 1] = pptr[i + 2];
@@ -230,12 +233,10 @@ void process_image(const void *p, int size) {
             dump_pgm(bigbuffer, (size / 2), framecnt, &frame_time);
         }
     } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
-        syslog(LOG_INFO, "10Hz: Dumping RGB frame as-is\n");
-        fprintf(log_file, "10Hz: Dumping RGB frame as-is\n");
+        log_message("10Hz: Dumping RGB frame as-is\n");
         dump_ppm(p, size, framecnt, &frame_time);
     } else {
-        syslog(LOG_ERR, "10Hz: ERROR - unknown dump format\n");
-        fprintf(log_file, "10Hz: ERROR - unknown dump format\n");
+        log_message("10Hz: ERROR - unknown dump format\n");
     }
 #endif
 }
@@ -269,8 +270,7 @@ int read_frame(void) {
                         return 0;
                     case EIO:
                     default:
-                        syslog(LOG_ERR, "10Hz: mmap failure\n");
-                        fprintf(log_file, "10Hz: mmap failure\n");
+                        log_message("10Hz: mmap failure\n");
                         errno_exit("VIDIOC_DQBUF");
                 }
             }
@@ -345,8 +345,7 @@ void mainloop(void) {
 
             if (0 == r) {
                 fprintf(stderr, "select timeout\n");
-                syslog(LOG_ERR, "10Hz: select timeout\n");
-                fprintf(log_file, "10Hz: select timeout\n");
+                log_message("10Hz: select timeout\n");
                 exit(EXIT_FAILURE);
             }
 
@@ -357,11 +356,9 @@ void mainloop(void) {
                     if (framecnt > 1) {
                         clock_gettime(CLOCK_MONOTONIC, &time_now);
                         fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-                        syslog(LOG_INFO, "10Hz: Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
-                        fprintf(log_file, "10Hz: Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
+                        log_message("10Hz: Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
                     } else {
-                        syslog(LOG_INFO, "10Hz: Initial frame read at %lf\n", fnow);
-                        fprintf(log_file, "10Hz: Initial frame read at %lf\n", fnow);
+                        log_message("10Hz: Initial frame read at %lf\n", fnow);
                     }
                 }
 
@@ -377,8 +374,7 @@ void mainloop(void) {
 
     clock_gettime(CLOCK_MONOTONIC, &time_stop);
     fstop = (double)time_stop.tv_sec + (double)time_stop.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "10Hz: Capture ended, total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
-    fprintf(log_file, "10Hz: Capture ended, total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
+    log_message("10Hz: Capture ended, total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
 }
 
 void stop_capturing(void) {
@@ -469,8 +465,7 @@ void init_read(unsigned int buffer_size) {
 
     if (!buffers) {
         fprintf(stderr, "10Hz: Out of memory\n");
-        syslog(LOG_ERR, "10Hz: Out of memory\n");
-        fprintf(log_file, "10Hz: Out of memory\n");
+        log_message("10Hz: Out of memory\n");
         exit(EXIT_FAILURE);
     }
 
@@ -479,8 +474,7 @@ void init_read(unsigned int buffer_size) {
 
     if (!buffers[0].start) {
         fprintf(stderr, "10Hz: Out of memory\n");
-        syslog(LOG_ERR, "10Hz: Out of memory\n");
-        fprintf(log_file, "10Hz: Out of memory\n");
+        log_message("10Hz: Out of memory\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -497,8 +491,7 @@ void init_mmap(void) {
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
             fprintf(stderr, "10Hz: %s does not support memory mapping\n", dev_name);
-            syslog(LOG_ERR, "10Hz: %s does not support memory mapping\n", dev_name);
-            fprintf(log_file, "10Hz: %s does not support memory mapping\n", dev_name);
+            log_message("10Hz: %s does not support memory mapping\n");
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_REQBUFS");
@@ -507,8 +500,7 @@ void init_mmap(void) {
 
     if (req.count < 2) {
         fprintf(stderr, "10Hz: Insufficient buffer memory on %s\n", dev_name);
-        syslog(LOG_ERR, "10Hz: Insufficient buffer memory on %s\n", dev_name);
-        fprintf(log_file, "10Hz: Insufficient buffer memory on %s\n", dev_name);
+        log_message("10Hz: Insufficient buffer memory on %s\n");
         exit(EXIT_FAILURE);
     }
 
@@ -516,8 +508,7 @@ void init_mmap(void) {
 
     if (!buffers) {
         fprintf(stderr, "10Hz: Out of memory\n");
-        syslog(LOG_ERR, "10Hz: Out of memory\n");
-        fprintf(log_file, "10Hz: Out of memory\n");
+        log_message("10Hz: Out of memory\n");
         exit(EXIT_FAILURE);
     }
 
@@ -558,8 +549,7 @@ void init_userp(unsigned int buffer_size) {
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
             fprintf(stderr, "10Hz: %s does not support user pointer I/O\n", dev_name);
-            syslog(LOG_ERR, "10Hz: %s does not support user pointer I/O\n", dev_name);
-            fprintf(log_file, "10Hz: %s does not support user pointer I/O\n", dev_name);
+            log_message("10Hz: %s does not support user pointer I/O\n");
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_REQBUFS");
@@ -570,8 +560,7 @@ void init_userp(unsigned int buffer_size) {
 
     if (!buffers) {
         fprintf(stderr, "10Hz: Out of memory\n");
-        syslog(LOG_ERR, "10Hz: Out of memory\n");
-        fprintf(log_file, "10Hz: Out of memory\n");
+        log_message("10Hz: Out of memory\n");
         exit(EXIT_FAILURE);
     }
 
@@ -581,8 +570,7 @@ void init_userp(unsigned int buffer_size) {
 
         if (!buffers[n_buffers].start) {
             fprintf(stderr, "10Hz: Out of memory\n");
-            syslog(LOG_ERR, "10Hz: Out of memory\n");
-            fprintf(log_file, "10Hz: Out of memory\n");
+            log_message("10Hz: Out of memory\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -597,8 +585,7 @@ void init_device(void) {
     if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
         if (EINVAL == errno) {
             fprintf(stderr, "10Hz: %s is no V4L2 device\n", dev_name);
-            syslog(LOG_ERR, "10Hz: %s is no V4L2 device\n", dev_name);
-            fprintf(log_file, "10Hz: %s is no V4L2 device\n", dev_name);
+            log_message("10Hz: %s is no V4L2 device\n");
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_QUERYCAP");
@@ -607,8 +594,7 @@ void init_device(void) {
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
         fprintf(stderr, "10Hz: %s is no video capture device\n", dev_name);
-        syslog(LOG_ERR, "10Hz: %s is no video capture device\n", dev_name);
-        fprintf(log_file, "10Hz: %s is no video capture device\n", dev_name);
+        log_message("10Hz: %s is no video capture device\n");
         exit(EXIT_FAILURE);
     }
 
@@ -616,8 +602,7 @@ void init_device(void) {
         case IO_METHOD_READ:
             if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
                 fprintf(stderr, "10Hz: %s does not support read I/O\n", dev_name);
-                syslog(LOG_ERR, "10Hz: %s does not support read I/O\n", dev_name);
-                fprintf(log_file, "10Hz: %s does not support read I/O\n", dev_name);
+                log_message("10Hz: %s does not support read I/O\n");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -626,8 +611,7 @@ void init_device(void) {
         case IO_METHOD_USERPTR:
             if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
                 fprintf(stderr, "10Hz: %s does not support streaming I/O\n", dev_name);
-                syslog(LOG_ERR, "10Hz: %s does not support streaming I/O\n", dev_name);
-                fprintf(log_file, "10Hz: %s does not support streaming I/O\n", dev_name);
+                log_message("10Hz: %s does not support streaming I/O\n");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -657,8 +641,7 @@ void init_device(void) {
 
     if (force_format) {
         printf("FORCING FORMAT\n");
-        syslog(LOG_INFO, "10Hz: FORCING FORMAT\n");
-        fprintf(log_file, "10Hz: FORCING FORMAT\n");
+        log_message("10Hz: FORCING FORMAT\n");
         fmt.fmt.pix.width = HRES;
         fmt.fmt.pix.height = VRES;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
@@ -668,8 +651,7 @@ void init_device(void) {
             errno_exit("VIDIOC_S_FMT");
     } else {
         printf("ASSUMING FORMAT\n");
-        syslog(LOG_INFO, "10Hz: ASSUMING FORMAT\n");
-        fprintf(log_file, "10Hz: ASSUMING FORMAT\n");
+        log_message("10Hz: ASSUMING FORMAT\n");
         if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
             errno_exit("VIDIOC_G_FMT");
     }
@@ -708,15 +690,13 @@ void open_device(void) {
 
     if (-1 == stat(dev_name, &st)) {
         fprintf(stderr, "10Hz: Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
-        syslog(LOG_ERR, "10Hz: Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
-        fprintf(log_file, "10Hz: Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
+        log_message("10Hz: Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     if (!S_ISCHR(st.st_mode)) {
         fprintf(stderr, "10Hz: %s is no device\n", dev_name);
-        syslog(LOG_ERR, "10Hz: %s is no device\n", dev_name);
-        fprintf(log_file, "10Hz: %s is no device\n", dev_name);
+        log_message("10Hz: %s is no device\n");
         exit(EXIT_FAILURE);
     }
 
@@ -724,8 +704,7 @@ void open_device(void) {
 
     if (-1 == fd) {
         fprintf(stderr, "10Hz: Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
-        syslog(LOG_ERR, "10Hz: Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
-        fprintf(log_file, "10Hz: Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
+        log_message("10Hz: Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -753,9 +732,9 @@ static const struct option long_options[] = {
     { "mmap",   no_argument,       NULL, 'm' },
     { "read",   no_argument,       NULL, 'r' },
     { "userp",  no_argument,       NULL, 'u' },
-    { "output", no_argument,       NULL, 'o' },
-    { "format", no_argument,       NULL, 'f' },
-    { "count",  required_argument, NULL, 'c' },
+    { "output", no argument,       NULL, 'o' },
+    { "format", no argument,       NULL, 'f' },
+    { "count",  required argument, NULL, 'c' },
     { 0, 0, 0, 0 }
 };
 
@@ -766,30 +745,29 @@ int main(int argc, char **argv) {
     char log_file_path[PATH_MAX];
 
     openlog("10Hz_capture_app", LOG_PID | LOG_CONS, LOG_USER);
-    syslog(LOG_INFO, "10Hz: Starting capture application\n");
+    log_message("10Hz: Starting capture application\n");
 
     if (readlink("/proc/self/exe", exec_path, sizeof(exec_path) - 1) != -1) {
         exec_dir = dirname(exec_path);
         snprintf(frames_dir, sizeof(frames_dir), "%s/frames", exec_dir);
         snprintf(log_file_path, sizeof(log_file_path), "%s/10Hz_capture.log", exec_dir);
         set_output_directory(frames_dir);
-        syslog(LOG_INFO, "10Hz: Output directory set to %s\n", frames_dir);
+        log_message("10Hz: Output directory set to %s\n", frames_dir);
     } else {
         perror("Failed to determine executable path");
-        syslog(LOG_ERR, "10Hz: Failed to determine executable path\n");
+        log_message("10Hz: Failed to determine executable path\n");
         exit(EXIT_FAILURE);
     }
 
     log_file = fopen(log_file_path, "w");
     if (!log_file) {
-        syslog(LOG_ERR, "10Hz: Failed to open log file %s\n", log_file_path);
+        log_message("10Hz: Failed to open log file %s\n", log_file_path);
         perror("Failed to open log file");
         exit(EXIT_FAILURE);
     }
 
     if (create_directory(frames_dir) != 0) {
-        syslog(LOG_ERR, "10Hz: Failed to create directory %s\n", frames_dir);
-        fprintf(log_file, "10Hz: Failed to create directory %s\n", frames_dir);
+        log_message("10Hz: Failed to create directory %s\n", frames_dir);
         exit(EXIT_FAILURE);
     }
 
@@ -860,14 +838,13 @@ int main(int argc, char **argv) {
 
     stop_capturing();
 
-    syslog(LOG_INFO, "10Hz: Total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
-    fprintf(log_file, "10Hz: Total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
+    log_message("10Hz: Total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
 
     uninit_device();
     close_device();
     fprintf(stderr, "\n");
 
-    syslog(LOG_INFO, "10Hz: Capture application finished\n");
+    log_message("10Hz: Capture application finished\n");
     fclose(log_file);
     closelog();
 
