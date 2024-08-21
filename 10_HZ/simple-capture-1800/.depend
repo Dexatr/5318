@@ -1,1 +1,7 @@
-capture.o: capture.c
+-O2
+-g
+-Wall
+-Wextra
+-pedantic
+-MM
+capture.c

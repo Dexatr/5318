@@ -67,7 +67,7 @@ void errno_exit(const char *s) {
     exit(EXIT_FAILURE);
 }
 
-int xioctl(int fh, int request, void *arg) {
+int xioctl(int fh, unsigned long request, void *arg) {
     int r;
     do {
         r = ioctl(fh, request, arg);
@@ -105,9 +105,9 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
         return;
     }
 
-    snprintf(&ppm_header[4], 11, "%010d", (int)time->tv_sec);
+    snprintf(&ppm_header[4], 11, "%010ld", time->tv_sec);
     strncat(&ppm_header[14], " sec ", 5);
-    snprintf(&ppm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
+    snprintf(&ppm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
     strncat(&ppm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
@@ -149,9 +149,9 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
         return;
     }
 
-    snprintf(&pgm_header[4], 11, "%010d", (int)time->tv_sec);
+    snprintf(&pgm_header[4], 11, "%010ld", time->tv_sec);
     strncat(&pgm_header[14], " sec ", 5);
-    snprintf(&pgm_header[19], 11, "%010d", (int)((time->tv_nsec)/1000000));
+    snprintf(&pgm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
     strncat(&pgm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
 
     written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
@@ -749,13 +749,13 @@ void usage(FILE *fp, int argc, char **argv) {
 static const char short_options[] = "d:hmruofc:";
 static const struct option long_options[] = {
     { "device", required_argument, NULL, 'd' },
-    { "help",   no argument,       NULL, 'h' },
-    { "mmap",   no argument,       NULL, 'm' },
-    { "read",   no argument,       NULL, 'r' },
-    { "userp",  no argument,       NULL, 'u' },
-    { "output", no argument,       NULL, 'o' },
-    { "format", no argument,       NULL, 'f' },
-    { "count",  required argument, NULL, 'c' },
+    { "help",   no_argument,       NULL, 'h' },
+    { "mmap",   no_argument,       NULL, 'm' },
+    { "read",   no_argument,       NULL, 'r' },
+    { "userp",  no_argument,       NULL, 'u' },
+    { "output", no_argument,       NULL, 'o' },
+    { "format", no_argument,       NULL, 'f' },
+    { "count",  required_argument, NULL, 'c' },
     { 0, 0, 0, 0 }
 };
 
