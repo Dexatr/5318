@@ -32,7 +32,7 @@
 // Frame capture configuration parameters
 #define START_UP_FRAMES 8
 #define LAST_FRAMES 1
-#define CAPTURE_FRAMES (180 + LAST_FRAMES) // 180 frames for 1Hz capture
+#define CAPTURE_FRAMES (1800 + LAST_FRAMES) // 180 frames for 1Hz capture
 #define FRAMES_TO_ACQUIRE (CAPTURE_FRAMES + START_UP_FRAMES + LAST_FRAMES)
 
 #define FRAMES_PER_SEC 1   // Set to 1 FPS for the assignment requirements
