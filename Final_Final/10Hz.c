@@ -1,3 +1,7 @@
+// sudo truncate -s 0 /var/log/syslog
+// Linux raspberrypi 6.6.31+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.6.31-1+rpt1 (2024-05-29) aarch64 GNU/Linux
+// sudo tail -n 200 /var/log/syslog
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
