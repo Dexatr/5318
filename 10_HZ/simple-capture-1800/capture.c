@@ -120,11 +120,11 @@ void dump_ppm(const void *p, int size, unsigned int tag, struct timespec *time) 
     }
 
     snprintf(&ppm_header[4], 11, "%010ld", time->tv_sec);
-    memcpy(&ppm_header[14], " sec ", 5);
-    snprintf(&ppm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
-    memcpy(&ppm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
+    snprintf(&ppm_header[14], 6, " sec ");
+    snprintf(&ppm_header[20], 11, "%010ld", (time->tv_nsec) / 1000000);
+    snprintf(&ppm_header[30], 20, " msec \n"HRES_STR" "VRES_STR"\n255\n");
 
-    written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
+    written = write(dumpfd, ppm_header, strlen(ppm_header));
     if (written == -1) {
         log_message("10Hz: Failed to write ppm header: %s\n", strerror(errno));
         close(dumpfd);
@@ -160,11 +160,11 @@ void dump_pgm(const void *p, int size, unsigned int tag, struct timespec *time) 
     }
 
     snprintf(&pgm_header[4], 11, "%010ld", time->tv_sec);
-    memcpy(&pgm_header[14], " sec ", 5);
-    snprintf(&pgm_header[19], 11, "%010ld", (time->tv_nsec) / 1000000);
-    memcpy(&pgm_header[29], " msec \n"HRES_STR" "VRES_STR"\n255\n", 19);
+    snprintf(&pgm_header[14], 6, " sec ");
+    snprintf(&pgm_header[20], 11, "%010ld", (time->tv_nsec) / 1000000);
+    snprintf(&pgm_header[30], 20, " msec \n"HRES_STR" "VRES_STR"\n255\n");
 
-    written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
+    written = write(dumpfd, pgm_header, strlen(pgm_header));
     if (written == -1) {
         log_message("10Hz: Failed to write pgm header: %s\n", strerror(errno));
         close(dumpfd);
