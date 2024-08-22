@@ -1,6 +1,6 @@
-// sudo truncate -s 0 /var/log/syslog
+// make clean && make && sudo truncate -s 0 /var/log/syslog && ./10Hz && uname -a > 10hz_syslog.txt && sudo grep -F "[10Hz]" /var/log/syslog >> 10hz_syslog.txt
+
 // Linux raspberrypi 6.6.31+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.6.31-1+rpt1 (2024-05-29) aarch64 GNU/Linux
-// sudo tail -n 200 /var/log/syslog > 10hz_syslog.txt
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,8 +71,8 @@ unsigned char bigbuffer[(1280 * 960)];
 
 // Function to handle errors and exit the program with an error message
 static void errno_exit(const char *s) {
-    syslog(LOG_ERR, "%s error %d, %s\n", s, errno, strerror(errno));
-    fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
+    syslog(LOG_ERR, "%s error %d, %s [10Hz]\n", s, errno, strerror(errno));
+    fprintf(stderr, "%s error %d, %s [10Hz]\n", s, errno, strerror(errno));
     exit(EXIT_FAILURE);
 }
 
@@ -118,8 +118,8 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     dumpfd = open(ppm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 0644);
 
     if (dumpfd == -1) {
-        syslog(LOG_ERR, "Failed to open ppm file %s: %s\n", ppm_dumpname, strerror(errno));
-        perror("Failed to open ppm file");
+        syslog(LOG_ERR, "Failed to open ppm file %s: %s [10Hz]\n", ppm_dumpname, strerror(errno));
+        perror("Failed to open ppm file [10Hz]");
         return;
     }
 
@@ -130,8 +130,8 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     // Write the PPM header to the file
     written = write(dumpfd, ppm_header, sizeof(ppm_header) - 1);
     if (written == -1) {
-        syslog(LOG_ERR, "Failed to write ppm header: %s\n", strerror(errno));
-        perror("Failed to write ppm header");
+        syslog(LOG_ERR, "Failed to write ppm header: %s [10Hz]\n", strerror(errno));
+        perror("Failed to write ppm header [10Hz]");
         close(dumpfd);
         return;
     }
@@ -141,8 +141,8 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     do {
         written = write(dumpfd, p, size);
         if (written == -1) {
-            syslog(LOG_ERR, "Failed to write ppm data: %s\n", strerror(errno));
-            perror("Failed to write ppm data");
+            syslog(LOG_ERR, "Failed to write ppm data: %s [10Hz]\n", strerror(errno));
+            perror("Failed to write ppm data [10Hz]");
             close(dumpfd);
             return;
         }
@@ -152,7 +152,7 @@ static void dump_ppm(const void *p, int size, unsigned int tag, struct timespec 
     // Log the time at which the frame was written
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "[Course #:4] [Final Project] [Frame Count: %d] [Image Capture Start Time: %lf seconds] PPM frame written to %s at %lf, %d bytes\n", framecnt, fnow - fstart, ppm_dumpname, (fnow - fstart), total);
+    syslog(LOG_INFO, "[Course #:4] [Final Project] [Frame Count: %d] [Image Capture Start Time: %lf seconds] PPM frame written to %s at %lf, %d bytes [10Hzgrep]\n", framecnt, fnow - fstart, ppm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -164,8 +164,8 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     dumpfd = open(pgm_dumpname, O_WRONLY | O_NONBLOCK | O_CREAT, 0644);
 
     if (dumpfd == -1) {
-        syslog(LOG_ERR, "Failed to open pgm file %s: %s\n", pgm_dumpname, strerror(errno));
-        perror("Failed to open pgm file");
+        syslog(LOG_ERR, "Failed to open pgm file %s: %s [10Hz]\n", pgm_dumpname, strerror(errno));
+        perror("Failed to open pgm file [10Hz]");
         return;
     }
 
@@ -176,8 +176,8 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     // Write the PGM header to the file
     written = write(dumpfd, pgm_header, sizeof(pgm_header) - 1);
     if (written == -1) {
-        syslog(LOG_ERR, "Failed to write pgm header: %s\n", strerror(errno));
-        perror("Failed to write pgm header");
+        syslog(LOG_ERR, "Failed to write pgm header: %s [10Hz]\n", strerror(errno));
+        perror("Failed to write pgm header [10Hz]");
         close(dumpfd);
         return;
     }
@@ -187,8 +187,8 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     do {
         written = write(dumpfd, p, size);
         if (written == -1) {
-            syslog(LOG_ERR, "Failed to write pgm data: %s\n", strerror(errno));
-            perror("Failed to write pgm data");
+            syslog(LOG_ERR, "Failed to write pgm data: %s [10Hz]\n", strerror(errno));
+            perror("Failed to write pgm data [10Hz]");
             close(dumpfd);
             return;
         }
@@ -198,7 +198,7 @@ static void dump_pgm(const void *p, int size, unsigned int tag, struct timespec 
     // Log the time at which the frame was written
     clock_gettime(CLOCK_MONOTONIC, &time_now);
     fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "[Course #:4] [Final Project] [Frame Count: %d] [Image Capture Start Time: %lf seconds] PGM frame written to %s at %lf, %d bytes\n", framecnt, fnow - fstart, pgm_dumpname, (fnow - fstart), total);
+    syslog(LOG_INFO, "[Course #:4] [Final Project] [Frame Count: %d] [Image Capture Start Time: %lf seconds] PGM frame written to %s at %lf, %d bytes [10Hz]\n", framecnt, fnow - fstart, pgm_dumpname, (fnow - fstart), total);
 
     close(dumpfd);
 }
@@ -226,7 +226,7 @@ static void process_image(const void *p, int size) {
     clock_gettime(CLOCK_REALTIME, &frame_time);    
 
     framecnt++;
-    syslog(LOG_INFO, "Processing frame %d with size %d\n", framecnt, size);
+    syslog(LOG_INFO, "Processing frame %d with size %d [10Hz]\n", framecnt, size);
 
     if (framecnt == 0) {
         clock_gettime(CLOCK_MONOTONIC, &time_start);
@@ -248,7 +248,7 @@ static void process_image(const void *p, int size) {
     } else if (fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24) {
         dump_ppm(p, size, framecnt, &frame_time);
     } else {
-        syslog(LOG_ERR, "ERROR - unknown dump format\n");
+        syslog(LOG_ERR, "ERROR - unknown dump format [10Hz]\n");
     }
 #endif
 }
@@ -283,7 +283,7 @@ static int read_frame(void) {
                         return 0;
                     case EIO:
                     default:
-                        syslog(LOG_ERR, "mmap failure\n");
+                        syslog(LOG_ERR, "mmap failure [10Hz]\n");
                         errno_exit("VIDIOC_DQBUF");
                 }
             }
@@ -360,7 +360,7 @@ static void mainloop(void) {
             }
 
             if (0 == r) {
-                syslog(LOG_ERR, "select timeout\n");
+                syslog(LOG_ERR, "select timeout [10Hz]\n");
                 exit(EXIT_FAILURE);
             }
 
@@ -371,9 +371,9 @@ static void mainloop(void) {
                     if (framecnt > 1) {
                         clock_gettime(CLOCK_MONOTONIC, &time_now);
                         fnow = (double)time_now.tv_sec + (double)time_now.tv_nsec / 1000000000.0;
-                        syslog(LOG_INFO, "Frame %d read at %lf, @ %lf FPS\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
+                        syslog(LOG_INFO, "Frame %d read at %lf, @ %lf FPS [10Hz]\n", framecnt, (fnow - fstart), (double)(framecnt + 1) / (fnow - fstart));
                     } else {
-                        syslog(LOG_INFO, "Initial frame read at %lf\n", fnow);
+                        syslog(LOG_INFO, "Initial frame read at %lf [10Hz]\n", fnow);
                     }
                 }
 
@@ -390,7 +390,7 @@ static void mainloop(void) {
     // Record the end time for the capture
     clock_gettime(CLOCK_MONOTONIC, &time_stop);
     fstop = (double)time_stop.tv_sec + (double)time_stop.tv_nsec / 1000000000.0;
-    syslog(LOG_INFO, "Capture ended, total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
+    syslog(LOG_INFO, "Capture ended, total capture time=%lf, for %d frames, %lf FPS [10Hz]\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
 }
 
 // Function to stop video capturing by turning off the video stream
@@ -484,7 +484,7 @@ static void init_read(unsigned int buffer_size) {
     buffers = calloc(1, sizeof(*buffers));
 
     if (!buffers) {
-        syslog(LOG_ERR, "Out of memory\n");
+        syslog(LOG_ERR, "Out of memory [10Hz]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -492,7 +492,7 @@ static void init_read(unsigned int buffer_size) {
     buffers[0].start = malloc(buffer_size);
 
     if (!buffers[0].start) {
-        syslog(LOG_ERR, "Out of memory\n");
+        syslog(LOG_ERR, "Out of memory [10Hz]\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -509,7 +509,7 @@ static void init_mmap(void) {
 
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
-            syslog(LOG_ERR, "%s does not support memory mapping\n", dev_name);
+            syslog(LOG_ERR, "%s does not support memory mapping [10Hz]\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_REQBUFS");
@@ -517,14 +517,14 @@ static void init_mmap(void) {
     }
 
     if (req.count < 2) {
-        syslog(LOG_ERR, "Insufficient buffer memory on %s\n", dev_name);
+        syslog(LOG_ERR, "Insufficient buffer memory on %s [10Hz]\n", dev_name);
         exit(EXIT_FAILURE);
     }
 
     buffers = calloc(req.count, sizeof(*buffers));
 
     if (!buffers) {
-        syslog(LOG_ERR, "Out of memory\n");
+        syslog(LOG_ERR, "Out of memory [10Hz]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -565,7 +565,7 @@ static void init_userp(unsigned int buffer_size) {
 
     if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
         if (EINVAL == errno) {
-            syslog(LOG_ERR, "%s does not support user pointer I/O\n", dev_name);
+            syslog(LOG_ERR, "%s does not support user pointer I/O [10Hz]\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_REQBUFS");
@@ -575,7 +575,7 @@ static void init_userp(unsigned int buffer_size) {
     buffers = calloc(4, sizeof(*buffers));
 
     if (!buffers) {
-        syslog(LOG_ERR, "Out of memory\n");
+        syslog(LOG_ERR, "Out of memory [10Hz]\n");
         exit(EXIT_FAILURE);
     }
 
@@ -584,7 +584,7 @@ static void init_userp(unsigned int buffer_size) {
         buffers[n_buffers].start = malloc(buffer_size);
 
         if (!buffers[n_buffers].start) {
-            syslog(LOG_ERR, "Out of memory\n");
+            syslog(LOG_ERR, "Out of memory [10Hz]\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -599,7 +599,7 @@ static void init_device(void) {
 
     if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
         if (EINVAL == errno) {
-            syslog(LOG_ERR, "%s is no V4L2 device\n", dev_name);
+            syslog(LOG_ERR, "%s is no V4L2 device [10Hz]\n", dev_name);
             exit(EXIT_FAILURE);
         } else {
             errno_exit("VIDIOC_QUERYCAP");
@@ -607,14 +607,14 @@ static void init_device(void) {
     }
 
     if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        syslog(LOG_ERR, "%s is no video capture device\n", dev_name);
+        syslog(LOG_ERR, "%s is no video capture device [10Hz]\n", dev_name);
         exit(EXIT_FAILURE);
     }
 
     switch (io) {
         case IO_METHOD_READ:
             if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-                syslog(LOG_ERR, "%s does not support read I/O\n", dev_name);
+                syslog(LOG_ERR, "%s does not support read I/O [10Hz]\n", dev_name);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -622,7 +622,7 @@ static void init_device(void) {
         case IO_METHOD_MMAP:
         case IO_METHOD_USERPTR:
             if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-                syslog(LOG_ERR, "%s does not support streaming I/O\n", dev_name);
+                syslog(LOG_ERR, "%s does not support streaming I/O [10Hz]\n", dev_name);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -651,7 +651,7 @@ static void init_device(void) {
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     if (force_format) {
-        syslog(LOG_INFO, "FORCING FORMAT\n");
+        syslog(LOG_INFO, "FORCING FORMAT [10Hz]\n");
         fmt.fmt.pix.width = HRES;
         fmt.fmt.pix.height = VRES;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
@@ -660,7 +660,7 @@ static void init_device(void) {
         if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
             errno_exit("VIDIOC_S_FMT");
     } else {
-        syslog(LOG_INFO, "ASSUMING FORMAT\n");
+        syslog(LOG_INFO, "ASSUMING FORMAT [10Hz]\n");
         if (-1 == xioctl(fd, VIDIOC_G_FMT, &fmt))
             errno_exit("VIDIOC_G_FMT");
     }
@@ -700,19 +700,19 @@ static void open_device(void) {
     struct stat st;
 
     if (-1 == stat(dev_name, &st)) {
-        syslog(LOG_ERR, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
+        syslog(LOG_ERR, "Cannot identify '%s': %d, %s [10Hz]\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     if (!S_ISCHR(st.st_mode)) {
-        syslog(LOG_ERR, "%s is no device\n", dev_name);
+        syslog(LOG_ERR, "%s is no device [10Hz]\n", dev_name);
         exit(EXIT_FAILURE);
     }
 
     fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 
     if (-1 == fd) {
-        syslog(LOG_ERR, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror(errno));
+        syslog(LOG_ERR, "Cannot open '%s': %d, %s [10Hz]\n", dev_name, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -766,7 +766,7 @@ int main(int argc, char **argv) {
     dup2(fileno(log_file), fileno(stdout));
     dup2(fileno(log_file), fileno(stderr));
 
-    syslog(LOG_INFO, "Starting capture application\n");
+    syslog(LOG_INFO, "Starting capture application [10Hz]\n");
 
     // Log uname output as required
     char uname_buffer[256];
@@ -774,7 +774,7 @@ int main(int argc, char **argv) {
     if (uname_pipe != NULL) {
         fgets(uname_buffer, sizeof(uname_buffer), uname_pipe);
         pclose(uname_pipe);
-        syslog(LOG_INFO, "%s", uname_buffer);
+        syslog(LOG_INFO, "%s [10Hz]\n", uname_buffer);
     }
 
     // Determine the directory where the executable is located and set the output directory for frames
@@ -782,15 +782,15 @@ int main(int argc, char **argv) {
         exec_dir = dirname(exec_path);
         snprintf(frames_dir, sizeof(frames_dir), "%s/frames10hz", exec_dir);
         set_output_directory(frames_dir);
-        syslog(LOG_INFO, "Output directory set to %s\n", frames_dir);
+        syslog(LOG_INFO, "Output directory set to %s [10Hz]\n", frames_dir);
     } else {
-        syslog(LOG_ERR, "Failed to determine executable path\n");
+        syslog(LOG_ERR, "Failed to determine executable path [10Hz]\n");
         exit(EXIT_FAILURE);
     }
 
     // Create the directory for saving frames
     if (create_directory(frames_dir) != 0) {
-        syslog(LOG_ERR, "Failed to create directory %s\n", frames_dir);
+        syslog(LOG_ERR, "Failed to create directory %s [10Hz]\n", frames_dir);
         exit(EXIT_FAILURE);
     }
 
@@ -864,8 +864,8 @@ int main(int argc, char **argv) {
     stop_capturing();
 
     // Print the total capture time and frames per second (FPS)
-    syslog(LOG_INFO, "Total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
-    printf("Total capture time=%lf, for %d frames, %lf FPS\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
+    syslog(LOG_INFO, "Total capture time=%lf, for %d frames, %lf FPS [10Hz]\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
+    printf("Total capture time=%lf, for %d frames, %lf FPS [10Hz]\n", (fstop - fstart), CAPTURE_FRAMES + 1, ((double)CAPTURE_FRAMES / (fstop - fstart)));
 
     // Uninitialize and close the device
     uninit_device();
@@ -873,7 +873,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "\n");
 
     // Close syslog
-    syslog(LOG_INFO, "Capture application finished\n");
+    syslog(LOG_INFO, "Capture application finished [10Hz]\n");
     closelog();
     fclose(log_file);
 

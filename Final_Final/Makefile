@@ -29,6 +29,8 @@ clean:
 	-rm -f *.o 10Hz 1Hz
 	-rm -f frames10hz/*
 	-rm -f frames1hz/*
+	-rmdir frames10hz
+	-rmdir frames1hz
 	-rm -f 10Hz_capture.log 1Hz_capture.log
 	-rm -f *.txt
 
