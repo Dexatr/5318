@@ -33,7 +33,7 @@
 // Frame capture settings
 #define START_UP_FRAMES 8  // Initial frames to skip
 #define LAST_FRAMES 1  // Last frame to capture
-#define CAPTURE_FRAMES (1800 + LAST_FRAMES) // Total frames for 1Hz capture (1800 seconds + 1 last frame)
+#define CAPTURE_FRAMES (180 + LAST_FRAMES) // Total frames for 1Hz capture (180 seconds + 1 last frame)
 #define FRAMES_TO_ACQUIRE (CAPTURE_FRAMES + START_UP_FRAMES + LAST_FRAMES)  // Total frames to acquire, including startup and last frames
 
 #define FRAMES_PER_SEC 1   // Frame rate set to 1 FPS
