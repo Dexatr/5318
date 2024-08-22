@@ -1,0 +1,21 @@
+
+https://jimmyhmiller.github.io/fsm-maker/#start%0A%0A1%20-%3E%20ImageCapture%0A%0AImageCapture%0A0%20-%3E%20SyslogHandling%0A1%20-%3E%20ImageCapture%0A2%20-%3E%20ImageProcessing%0A%0A%0AImageProcessing%0A0%20-%3E%20SyslogHandling%0A1%20-%3E%20DataTransmission%0A%0ADataTransmission%0A0%20-%3E%20SyslogHandling%0A%0ASyslogHandling
+
+start
+
+1 -> ImageCapture
+
+ImageCapture
+0 -> SyslogHandling
+1 -> ImageCapture
+2 -> ImageProcessing
+
+
+ImageProcessing
+0 -> SyslogHandling
+1 -> DataTransmission
+
+DataTransmission
+0 -> SyslogHandling
+
+SyslogHandling
