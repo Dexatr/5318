@@ -1,4 +1,4 @@
-// make clean && make && sudo truncate -s 0 /var/log/syslog && ./1Hz && uname -a > 1hz_syslog.txt && sudo grep -F "[1Hz]" /var/log/syslog >> 1hz_syslog.txt
+// make clean_1Hz && make 1Hz && sudo truncate -s 0 /var/log/syslog && ./1Hz && uname -a > 1hz_syslog.txt && sudo grep -F "[1Hz]" /var/log/syslog >> 1hz_syslog.txt
 
 // Linux raspberrypi 6.6.31+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.6.31-1+rpt1 (2024-05-29) aarch64 GNU/Linux
 
