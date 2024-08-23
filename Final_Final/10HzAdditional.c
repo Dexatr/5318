@@ -751,7 +751,7 @@ static const struct option long_options[] = {
 // Function to combine PPM/PGM images into a WebM video
 void create_webm(const char *frames_dir) {
     char webm_command[PATH_MAX + 100];
-    snprintf(webm_command, sizeof(webm_command), "ffmpeg -framerate %d -i %s/test%%04d.ppm -c:v libvpx -b:v 1M -y %s/10hz_video.webm",
+    snprintf(webm_command, sizeof(webm_command), "ffmpeg -framerate %d -i %s/test%%04d.pgm -c:v libvpx -b:v 1M -y %s/10hz_video.webm",
              FRAMES_PER_SEC, frames_dir, frames_dir);
     int ret = system(webm_command);
     if (ret == -1) {
