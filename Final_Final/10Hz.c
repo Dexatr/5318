@@ -32,7 +32,7 @@
 // Frame capture configuration parameters
 #define START_UP_FRAMES 8
 #define LAST_FRAMES 1
-#define CAPTURE_FRAMES (1800 + LAST_FRAMES)
+#define CAPTURE_FRAMES (18190 + LAST_FRAMES)  // Modified to capture 18190 frames
 #define FRAMES_TO_ACQUIRE (CAPTURE_FRAMES + START_UP_FRAMES + LAST_FRAMES)
 
 #define FRAMES_PER_SEC 10   // Set to 10 FPS for the assignment requirements
@@ -879,3 +879,4 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
