@@ -757,7 +757,7 @@ int main(int argc, char **argv) {
     // Open syslog for debugging and set log file
     openlog("capture_app", LOG_PID | LOG_CONS, LOG_USER);
 
-    FILE *log_file = fopen("1hz_syslog.txt", "a");
+    FILE *log_file = fopen("1hz_alternative_syslog.txt", "a");
     if (log_file) {
         int log_fd = fileno(log_file);
         dup2(log_fd, STDERR_FILENO); // Redirect syslog output to file
