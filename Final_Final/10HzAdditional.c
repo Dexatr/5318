@@ -1,7 +1,3 @@
-// make clean_10HzAdditional && make 10HzAdditional && sudo truncate -s 0 /var/log/syslog && ./10HzAdditional && uname -a > 10hz_additional_syslog.txt && sudo grep -F "[10Hz]" /var/log/syslog >> 10hz_additional_syslog.txt
-
-// Linux raspberrypi 6.6.31+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.6.31-1+rpt1 (2024-05-29) aarch64 GNU/Linux
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +29,7 @@
 // Frame capture configuration parameters
 #define START_UP_FRAMES 8
 #define LAST_FRAMES 1
-#define CAPTURE_FRAMES (1800 + LAST_FRAMES)
+#define CAPTURE_FRAMES 1818 // Adjusted to make 1819 the final frame when LAST_FRAMES is added
 #define FRAMES_TO_ACQUIRE (CAPTURE_FRAMES + START_UP_FRAMES + LAST_FRAMES)
 
 #define FRAMES_PER_SEC 10   // Set to 10 FPS for the assignment requirements
@@ -865,3 +861,4 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
